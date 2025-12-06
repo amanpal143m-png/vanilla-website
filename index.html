@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For You ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #FFF7FB;
+      --card: #ffffff;
+      --accent: #ff4d8b;
+      --muted: #666;
+    }
+    *{box-sizing:border-box;font-family:'Poppins',sans-serif}
+    body{margin:0;background:linear-gradient(180deg,#fff 0%,#ffeef7 100%);display:flex;align-items:center;justify-content:center;height:100vh}
+    .card{width:92%;max-width:720px;background:var(--card);padding:28px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.08);text-align:center}
+    .avatar{width:130px;height:130px;border-radius:50%;object-fit:cover;border:6px solid rgba(255,77,139,0.12);margin:0 auto}
+    h1{margin:14px 0 6px;font-size:28px;color:#111}
+    p.lead{color:var(--muted);margin:0 0 16px}
+    .typewriter{font-weight:600;color:var(--accent);min-height:26px}
+    .btn{display:inline-block;padding:10px 18px;border-radius:10px;background:var(--accent);color:white;text-decoration:none;margin:12px;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+    /* surprise box */
+    .secret{margin-top:18px}
+    .input{padding:10px 12px;border-radius:10px;border:1px solid #eee;width:60%;max-width:280px}
+    .hidden-msg{margin-top:14px;padding:14px;border-radius:12px;background:#fff0f6;border:1px dashed rgba(255,77,139,0.25);display:none}
+    /* confetti canvas */
+    #confetti{position:fixed;left:0;top:0;pointer-events:none;width:100%;height:100%;z-index:40}
+    @media (max-width:460px){.avatar{width:110px;height:110px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+  <div class="card" role="main" aria-label="Crush surprise card">
+    <img class="avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="your crush pic (replace)">
+    <h1>Hey, <span id="crushName">You</span> ❤️</h1>
+    <p class="lead">Bas ek chhoti si baat kehni thi...</p>
+    <div class="typewriter" id="typewriter"></div>
+
+    <div style="margin-top:12px">
+      <button class="btn" id="revealBtn">Surprise Message</button>
+      <a class="small" href="#" id="playSong">Play a song</a>
+    </div>
+
+    <div class="secret" id="secretArea" aria-hidden="true">
+      <input id="pass" class="input" placeholder="Type the secret word" />
+      <button class="btn" id="unlock">Open</button>
+      <div class="hidden-msg" id="hiddenMsg">
+        <h3>For you ✨</h3>
+        <p>तुम्हारी मुस्कान मेरे दिन का सबसे अच्छा हिस्सा है। क्या तुम मेरे साथ कॉफ़ी पर चलोगी/चलोगे?</p>
+        <p class="small">— एक रिश्ता की शुरुआत ☺️</p>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:18px">Tip: ऊपर वाली तस्वीर और टेक्स्ट बदलने के लिए HTML में avatar और messages edit करो.</p>
+  </div>
+
+  <audio id="bgmusic" src=""></audio>
+
+  <script>
+    // small typewriter
+    const lines = ["तुम्हारे बिना दिन अधूरा लगता है...", "तुम्हारी हँसी दिल को छू जाती है.", "क्या मैं तुम्हें कॉफ़ी पे ले जा सकता/सकती हूँ?"];
+    const el = document.getElementById('typewriter');
+    let li = 0, ch = 0;
+    function typeLoop(){
+      if(li>=lines.length){ li=0; setTimeout(()=>{el.innerText=''},1200); return setTimeout(typeLoop,1400) }
+      const txt = lines[li];
+      el.innerText = txt.slice(0,ch);
+      ch++;
+      if(ch>txt.length){ li++; ch=0; setTimeout(typeLoop,1400) } else setTimeout(typeLoop,80);
+    }
+    typeLoop();
+
+    // reveal flow
+    document.getElementById('revealBtn').addEventListener('click', ()=> {
+      document.getElementById('secretArea').style.display='block';
+      document.getElementById('secretArea').setAttribute('aria-hidden','false');
+      document.getElementById('pass').focus();
+    });
+
+    // unlock with password
+    const unlock = document.getElementById('unlock');
+    unlock.addEventListener('click', ()=> {
+      const v = document.getElementById('pass').value.trim().toLowerCase();
+      if(v === 'yes' || v === 'haan' || v==='haan?') {
+        document.getElementById('hiddenMsg').style.display='block';
+        startConfetti();
+      } else {
+        alert('गलत शब्द — थोड़ा और प्यारा सोचो :)');
+      }
+    });
+
+    // simple confetti (no external libs)
+    function startConfetti(){
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      let W = canvas.width = window.innerWidth;
+      let H = canvas.height = window.innerHeight;
+      const pieces = [];
+      for(let i=0;i<120;i++){
+        pieces.push({x:Math.random()*W,y:Math.random()*-H*0.5,r:Math.random()*6+4,vy:Math.random()*3+1,angle:Math.random()*360,spin:Math.random()*0.1})
+      }
+      let t;
+      function frame(){
+        ctx.clearRect(0,0,W,H);
+        for(const p of pieces){
+          p.y += p.vy;
+          p.angle += p.spin;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.angle);
+          ctx.fillStyle = `hsl(${(p.r*40)%360} 80% 60%)`;
+          ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
+          ctx.restore();
+          if(p.y>H+20){ p.y = -10; p.x = Math.random()*W; }
+        }
+        t = requestAnimationFrame(frame);
+      }
+      frame();
+      setTimeout(()=>{ cancelAnimationFrame(t); ctx.clearRect(0,0,W,H) },8000);
+    }
+
+    // optional: play short song if you add URL
+    document.getElementById('playSong').addEventListener('click',(e)=>{
+      e.preventDefault();
+      const s = document.getElementById('bgmusic');
+      if(!s.src){ alert('Song URL set nahi hai. HTML me audio id="bgmusic" ka src add karo.'); return;}
+      s.play();
+    });
+
+    // small personalization from URL (e.g. ?name=Anjali)
+    const params = new URLSearchParams(location.search);
+    if(params.get('name')) document.getElementById('crushName').innerText = params.get('name');
+  </script>
+</body>
+</html>
